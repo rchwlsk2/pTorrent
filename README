@@ -1,0 +1,11 @@
+pTorrent File Sharing Network
+(Programming Studio Final Project)
+
+author: Paul Rachwalski
+
+SUMMARY:
+    The pTorrent project is a peer-to-peer file sharing network, based on a (very) simplified model of the BitTorrent
+    network.
+    The main aspect taken from the BitTorrent network is the concept of a tracker server, which is a server
+    that peers can poll to get associated IP addresses for a file from, which allows the peer to download from as many
+    active hosts as are available.

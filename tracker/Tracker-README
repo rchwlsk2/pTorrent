@@ -1,0 +1,38 @@
+pTorrent Simple Tracker Server
+
+author: Paul Rachwalski
+date: April 3, 2015
+
+
+SUMMARY:
+    The pTorrent tracker server is a server that contains a database of IPs related to each file. The request formats and
+    details are outlined below.
+
+REQUESTS:
+    ADD
+        Adds an association to the table between a file and an IP address.
+
+        Format:
+            ADD file_id ip_address
+
+    REMOVE
+        Removes associations between files and IP addresses.
+
+        Format:
+            REM file_id ip_address          (removes single association)
+            REM * ip_address                (removes all associations with IP)
+
+    GET
+        Returns a space separated string of all IP addresses associated with a particular file.
+
+        Format:
+            GET file_id
+
+
+TESTING:
+    The test cases in the ServerTest.py file must be run using the following method
+    (must be run within PyCharm, packages not recognized externally):
+
+    1.) Delete data/tracker.db if it exists
+    2.) Start a server instance of TrackerServer.py
+    3.) Run the test cases
