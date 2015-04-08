@@ -6,4 +6,7 @@ from tests.file_manager_tests.MetadataFileTest import TestMetadataFile
 from tests.file_manager_tests.FileMapTest import TestFileMap
 from tests.file_manager_tests.FileAssemblerTest import TestFileAssembler
 
+from tests.network_connection_tests.ClientConnectionTest import TestClientConnection
+from tests.network_connection_tests.ServerConnectionTest import TestServerConnection
+
 __author__ = 'paulrachwalski'

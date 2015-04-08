@@ -47,8 +47,8 @@ class ClientConnection(object):
     # Requests a section of of the file
     ##
     def send_request(self, file, file_id, offset, length):
-        message = self.create_request(file, file_id, offset, length)
-        self.sock.send(message)
+        message = ClientConnection.create_request(file_id, offset, length)
+        self.sock.send(message.encode())
         return
 
 
@@ -61,7 +61,8 @@ class ClientConnection(object):
     # @param length The length of the file
     # @return The JSON string of the message
     ##
-    def create_request(self, file, file_id, offset, length):
+    @staticmethod
+    def create_request(file_id, offset, length):
         response_dict = {
             TYPE: TYPE_REQUEST,
             FILE: file_id,
@@ -69,4 +70,4 @@ class ClientConnection(object):
             SIZE: length
         }
 
-        return json.dump(response_dict)
+        return json.dumps(response_dict)

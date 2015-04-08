@@ -35,8 +35,8 @@ class ServerConnection(object):
     # @param length The length of the file
     ##
     def send_response(self, file, file_id, offset, length):
-        message = self.create_response(file, file_id, offset, length)
-        self.connection.send(message)
+        message = ServerConnection.create_response(file, file_id, offset, length)
+        self.connection.send(message.encode())
         return
 
     ##
@@ -48,10 +48,11 @@ class ServerConnection(object):
     # @param length The length of the file
     # @return The JSON string of the message
     ##
-    def create_response(self, file, file_id, offset, length):
+    @staticmethod
+    def create_response(file, file_id, offset, length):
         with open(file, "rb") as data_file:
             data_file.seek(offset)
-            data_bytes = data_file.read(length)
+            data_bytes = data_file.read(length).decode()
 
         response_dict = {
             TYPE: TYPE_DATA,
@@ -60,4 +61,4 @@ class ServerConnection(object):
             SIZE: length,
             DATA: data_bytes
         }
-        return json.dump(response_dict)
+        return json.dumps(response_dict)
