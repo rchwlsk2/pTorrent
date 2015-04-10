@@ -1,7 +1,9 @@
 from socket import *
 from socket import error as sock_err
-import _thread
+import threading
 import os
+import signal
+import sys
 
 from tracker.TrackerConstants import TrackerConstants
 from tracker.DatabaseManager import DatabaseManager
@@ -35,16 +37,22 @@ class TrackerServer(object):
         if not os.path.exists(self.db_path):
             self.db_manager.init_db()
 
+        # Exit handler
+        signal.signal(signal.SIGINT, self.exit_handler)
+
         address = (host, port)
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
+        print("Starting server... ")
         try:
             self.sock.bind(address)
         except sock_err as e:
             print('Socket bind failed. Error Code: ' + str(e))
             sys.exit()
 
+        hostname = host if host != '' else "localhost"
+        print("Server is running at " + hostname + ":" + str(port) + "\n")
         self.sock.listen(10)
 
         # Start the server loop
@@ -54,6 +62,13 @@ class TrackerServer(object):
         return
 
     ##
+    # Exit SIGINT handler (ctrl+c)
+    ##
+    def exit_handler(self, signum, frame):
+        print("\nServer stopped!")
+        sys.exit(0)
+
+    ##
     # The loop of the server to accept connections
     ##
     def server_loop(self):
@@ -61,7 +76,7 @@ class TrackerServer(object):
             connection, address = self.sock.accept()
             print('Connected with ' + address[0] + ':' + str(address[1]))
 
-            _thread.start_new_thread(self.client_thread, (connection,))
+            threading.Thread(target=self.client_thread, args=(connection,)).start()
         return
 
     ##
@@ -75,7 +90,7 @@ class TrackerServer(object):
         while True:
             data = connection.recv(self.buffer_size)
             if not data:
-                break
+                return
 
             data = bytes.decode(data)
             if data.startswith(TrackerConstants.ADD):
