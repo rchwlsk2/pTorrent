@@ -92,7 +92,6 @@ class FileMap(object):
         mask = 1 << bit_off
         self.map[byte_off] |= mask
 
-
         self.in_progress.remove(bit)
         return
 
