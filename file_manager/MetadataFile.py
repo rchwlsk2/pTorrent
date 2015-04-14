@@ -1,7 +1,7 @@
 import json
 import os
 from file_manager.FileConstants import *
-import PATHS
+import CONSTANTS
 
 ##
 # Manages creation and interpretation of .ptorrent files
@@ -48,7 +48,7 @@ class MetadataFile(object):
                     FILE_PIECE_SIZE: self.piece_size}
         json_str = json.dumps(metadata, indent=4)
 
-        meta_filename = PATHS.META_FILES + self.file_id + "." + METADATA_EXT
+        meta_filename = CONSTANTS.META_FILES + self.file_id + "." + METADATA_EXT
 
         with open(meta_filename, 'w') as meta_file:
             meta_file.write(json_str)

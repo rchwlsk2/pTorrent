@@ -40,16 +40,14 @@ class TestClientConnection(unittest.TestCase):
     def test_socket(self):
         client = ClientConnection("", 50000)
 
-        file = "a.txt"
         file_id = "hi-123-2"
         offset = 12
         length = 4
 
-        client.send_request(file, file_id, offset, length)
+        message_sent = client.send_request(file_id, offset, length)
 
-        message = client.create_request(file_id, offset, length)
-        data = client.sock.recv(1024).decode()
+        message_gen = json.loads(client.create_request(file_id, offset, length))
 
-        self.assertEqual(message, data, "Incorrect message sent")
+        self.assertEqual(message_gen, message_sent, "Incorrect message sent")
 
         return

@@ -1,5 +1,5 @@
 from file_manager.FileUtils import FileUtils
-import PATHS
+import CONSTANTS
 import unittest
 import os
 import shutil

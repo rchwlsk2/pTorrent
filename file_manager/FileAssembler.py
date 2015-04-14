@@ -2,7 +2,7 @@ import os
 from file_manager.FileMap import FileMap
 from file_manager.MetadataFile import MetadataFile
 from file_manager.FileConstants import *
-import PATHS
+import CONSTANTS
 
 
 ##
@@ -23,9 +23,9 @@ class FileAssembler(object):
         self.metadata = self.metadata.parse(metadata_file)
 
         self.filename = self.metadata.filename + "." + TEMP_EXT
-        self.file_path = PATHS.DOWNLOADS + self.filename
+        self.file_path = CONSTANTS.DOWNLOADS + self.filename
 
-        map_name = PATHS.MAPS + self.metadata.file_id + "." + MAP_EXT
+        map_name = CONSTANTS.MAPS + self.metadata.file_id + "." + MAP_EXT
         self.map = FileMap(map_name, self.metadata.size, self.metadata.piece_size)
 
         # Initialize map file and empty file
@@ -75,7 +75,7 @@ class FileAssembler(object):
     ##
     def convert_to_full(self):
         if self.is_downloaded():
-            new_name = PATHS.DOWNLOADS + self.metadata.filename
+            new_name = CONSTANTS.DOWNLOADS + self.metadata.filename
             os.rename(self.file_path, new_name)
             self.file_path = new_name
         return

@@ -11,7 +11,11 @@ MAPS = "tmp/maps/"
 META_FILES = "tmp/meta/"
 DOWNLOADS = "downloads/"
 
-LOCALHOST = ""
+LOCALHOST = "localhost"
+
+PORT = 36969
+BUFFER_SIZE = 1024
+UPDATE_INTERVAL = 3
 
 DEBUG_DB = "tests/tracker_tests/data/tracker.db"
 NORMAL_DB = "tracker/data/tracker.db"

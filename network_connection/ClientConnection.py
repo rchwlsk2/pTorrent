@@ -46,12 +46,32 @@ class ClientConnection(object):
 
     ##
     # Requests a section of of the file
+    #
+    # @param file_id The ID of the file to download
+    # @param offset The offset of the piece of the file to get
+    # @param length The size of the piece of the file to get
     ##
-    def send_request(self, file, file_id, offset, length):
+    def send_request(self, file_id, offset, length):
         message = ClientConnection.create_request(file_id, offset, length)
         self.sock.send(message.encode())
-        return
 
+        # Read entire response
+        response = ""
+        part = None
+        while part != "":
+            part = self.sock.recv(2048).decode()
+            response += part
+
+        # Check that response is proper
+        if response:
+            response_dict = json.loads(response)
+            same_id = response_dict[FILE] == file_id
+            same_offset = response_dict[OFFSET] == offset
+            same_length = response_dict[SIZE] == length
+            if same_id and same_offset and same_length:
+                return response_dict
+
+        return None
 
     ##
     # Creates a JSON string for the response message

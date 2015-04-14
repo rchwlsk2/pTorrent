@@ -1,9 +1,9 @@
 from tracker import TrackerServer
-import PATHS
+import CONSTANTS
 
 DEBUG = True
 
 if DEBUG:
-    tracker = TrackerServer(PATHS.LOCALHOST, 6044, PATHS.DB_SCHEMA, PATHS.DEBUG_DB)
+    tracker = TrackerServer(CONSTANTS.LOCALHOST, 6044, CONSTANTS.DB_SCHEMA, CONSTANTS.DEBUG_DB)
 else:
-    tracker = TrackerServer(PATHS.LOCALHOST, 6044, PATHS.DB_SCHEMA, PATHS.NORMAL_DB)
+    tracker = TrackerServer(CONSTANTS.LOCALHOST, 6044, CONSTANTS.DB_SCHEMA, CONSTANTS.NORMAL_DB)

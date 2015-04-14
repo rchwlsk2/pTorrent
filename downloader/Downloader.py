@@ -2,7 +2,8 @@ import threading
 import socket
 from file_manager import FileAssembler
 from tracker import TrackerConstants
-from network_connection import ClientConnection
+from network_connection import ClientConnection, MessageConstants
+import CONSTANTS
 
 
 ##
@@ -13,25 +14,26 @@ from network_connection import ClientConnection
 ##
 class Downloader(object):
 
-    SLEEP_TIME = 3
-    BUF_SIZE = 1024
-    PORT = 46969
-
     ##
     # Starts the download threads and the thread to keep the ip list up to date
     #
+    # @param download_mgr The DownloadManager to use to interface with the connection manager
     # @param metadata The path to the metadata file
     ##
-    def __init__(self, metadata, ip, port):
+    def __init__(self, download_mgr, metadata, ip, port):
+        self.download_mgr = download_mgr
         self.file = FileAssembler(metadata)
+        self.file_id = self.file.metadata.file_id
         self.host = ip
         self.port = port
 
-        self.ip_threads = []
+        self.ip_threads = {}
         self.ips = []
 
-        self.should_run = True
+        self.should_wake = False
+        self.cv = threading.Condition()     # Condition variable to prevent queueing of entire files immediately
 
+        self.should_run = True
         return
 
     ##
@@ -50,33 +52,37 @@ class Downloader(object):
         return
 
     ##
-    # Thread to periodically refresh the list of IP addresses to download from
+    # Timer thread to periodically refresh the list of IP addresses to download from
     ##
     def ip_refresh(self):
+        new_ips = []
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         if self.should_run:
+            print(self.file_id + " : refreshing")
+
             # Restart timer
-            threading.Timer(self.SLEEP_TIME, self.ip_refresh).start()
+            threading.Timer(CONSTANTS.UPDATE_INTERVAL, self.ip_refresh).start()
 
             # Send request to server
-            message = TrackerConstants.GET + self.file.metadata.file_id
+            message = TrackerConstants.GET + self.file_id
             print(message)
 
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.connect((self.host, self.port))
-
-            new_ips = []
-            response = sock.recv(self.BUF_SIZE).decode()
+            response = sock.recv(CONSTANTS.BUFFER_SIZE).decode()
             if response == TrackerConstants.CONNECT_SUCCESS:
                 sock.send(message.encode())
-                ip_str = sock.recv(self.BUF_SIZE).decode()
+                ip_str = sock.recv(CONSTANTS.BUFFER_SIZE).decode()
                 new_ips = ip_str.split(" ")
+                print("Tracker response: " + str(new_ips))
 
             # Setup connection to tracker
             for ip in new_ips:
                 if ip not in self.ips:
-                    thread = ConnectionThread(ip, self.port, target=self.connection_thread, args=(ip, self.port))
+                    thread = threading.Thread(target=self.connection_thread, args=(ip, CONSTANTS.PORT))
                     self.ip_threads.append(thread)
+                    self.download_mgr.conn_mgr.add(ip, CONSTANTS.PORT)
                     thread.start()
 
             for cur_thread in self.ip_threads:
@@ -90,37 +96,38 @@ class Downloader(object):
 
     ##
     # Thread to initialize a connection
+    #
+    # @param ip The IP address of the connection
+    # @param port The port of the connection
     ##
     def connection_thread(self, ip, port):
-        client_conn = ClientConnection(ip, port)
-
         offset = self.file.get_recommendation()
         while offset >= 0:
-            data = client_conn.sock.recv(self.file.metadata.piece_size)
-            if not data: break
+            request = (self.file_id, offset, self.file.metadata.piece_size)
+            connection_thread = self.download_mgr.conn_mgr.get(ip, port)
+            connection_thread.request(request)
 
-            data = data.decode()
-            self.file.write(offset, data)
+            self.cv.acquire()
+            while not self.should_wake:
+                self.cv.wait()
+            self.should_wake = False
+            self.cv.release()
 
             offset = self.file.get_recommendation()
 
-        client_conn.terminate()
         return
 
-
-##
-# Simple extension of Thread class to be able to store the associated IP and port with the connection
-##
-class ConnectionThread(threading.Thread):
-
     ##
-    # Extends default constructor to store the ip and port of the file host
+    # Writes data from the file host's response to the file
     #
-    # @param ip The IP address of the host
-    # @param port The port
-    def __init__(self, ip, port, group=None, target=None, name=None, args=(), kwargs={}):
-        super.__init__(group=group, target=target, name=name, args=args, kwargs=kwargs)
+    # @param json_dict The dictionary of the response
+    ##
+    def add_data(self, json_dict):
+        if json_dict[MessageConstants.FILE] == self.file_id:
+            offset = json_dict[MessageConstants.OFFSET]
+            data = json_dict[MessageConstants.DATA]
+            self.file.write(offset, data)
 
-        self.ip = ip
-        self.port = port
+            self.should_wake = True
+            self.cv.notify()
         return
