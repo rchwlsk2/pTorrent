@@ -50,7 +50,7 @@ class UploadManager(object):
             sys.exit()
 
         hostname = tracker_ip if tracker_ip != '' else "localhost"
-        print("Server is running at " + hostname + ":" + str(tracker_port) + "\n")
+        print("Upload server is running at " + hostname + ":" + str(tracker_port) + "\n")
         self.sock.listen(10)
 
         # Start the server loop

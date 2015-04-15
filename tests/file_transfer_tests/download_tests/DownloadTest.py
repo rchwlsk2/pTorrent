@@ -19,11 +19,12 @@ class TestDownload(unittest.TestCase):
         pass
 
     def test_something(self):
-        ameta = "tmp/meta/a.txt-2048-262144.ptorrent"
-        bmeta = "tmp/meta/b.txt-2048-262144.ptorrent"
+        ameta = "download_tests/tmp/meta/a.txt-2048-262144.ptorrent"
+        bmeta = "download_tests/tmp/meta/garb.txt-100000-32768.ptorrent"
 
         ameta_file = MetadataFile()
         ameta_file.parse(ameta)
+
         bmeta_file = MetadataFile()
         bmeta_file.parse(bmeta)
 
@@ -31,13 +32,13 @@ class TestDownload(unittest.TestCase):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.connect(('', 6045))
 
-        #a_add_request = TrackerConstants.ADD + ameta_file.file_id + " localhost"
-        #sock.sendall(a_add_request.encode())
+        a_add_request = TrackerConstants.ADD + ameta_file.file_id + " localhost"
+        sock.sendall(a_add_request.encode())
 
         sleep(0.1)
 
-        #b_add_request = TrackerConstants.ADD + bmeta_file.file_id + " localhost"
-        #sock.sendall(b_add_request.encode())
+        b_add_request = TrackerConstants.ADD + bmeta_file.file_id + " localhost"
+        sock.sendall(b_add_request.encode())
 
 
         #downloader = Downloader(meta, '', 6045)

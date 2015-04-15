@@ -12,7 +12,7 @@ DOWNLOADS = "downloads/"
 
 LOCALHOST = "localhost"
 
-PORT = 36981
+PORT = 36982
 BUFFER_SIZE = 1024
 UPDATE_INTERVAL = 3
 

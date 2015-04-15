@@ -1,5 +1,6 @@
 import unittest
 from uploader import UploadManager
+from file_manager import MetadataFile
 import CONSTANTS
 
 
@@ -15,5 +16,8 @@ class TestUpload(unittest.TestCase):
         pass
 
     def test_something(self):
+        garb_meta = MetadataFile()
+        garb_meta.generate("downloads/garb.txt", "localhost", piece_size=32768)
+
         up_mgr = UploadManager("", '', CONSTANTS.PORT)
         return
