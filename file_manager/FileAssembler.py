@@ -33,6 +33,8 @@ class FileAssembler(object):
             self.map.create()
             self.map.save()
             self.create_empty_file()
+        else:
+            self.map.load()
         return
 
     ##

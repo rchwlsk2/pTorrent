@@ -33,6 +33,7 @@ class FileMap(object):
     ##
     def create(self):
         self.map = bytearray(self.bytes)
+        print("CREATED MAP", self.map)
         return
 
     ##

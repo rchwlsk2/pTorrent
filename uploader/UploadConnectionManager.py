@@ -1,65 +1,49 @@
-import os
 import threading
-
-from uploader.Uploader import Uploader
-from file_manager import MetadataFile, FileConstants
-import CONSTANTS
+from network_connection import ServerConnection, MessageConstants
 
 
 ##
-# Manages all file uploads
+# Keeps track of connections for uploading files
 #
 # @author Paul Rachwalski
 # @date Apr 14, 2015
 ##
-class UploadManager(object):
+class UploadConnectionManager(object):
 
     ##
-    # Initializes dictionary of downloaders and a DCM
+    # Initialize the connection dictionary
+    #
+    # @param
     ##
-    def __init__(self, root_path, tracker_ip, tracker_port):
-        self.tracker_ip = tracker_ip
-        self.tracker_port = tracker_port
+    def __init__(self, download_mgr):
+        self.download_mgr = download_mgr
 
-        self.uploaders = {}         # Key is the file ID
-        self.connections = {}       # Key is the IP
-
-        self.gather_files(root_path)
+        # Key is (ip, port) tuple, value is connection thread
+        self.connections = {}
         return
 
     ##
-    # Gets a list of all files that have been downloaded and creates uploaders for them
+    # Creates a new connection if one does not exist
+    #
+    # @param ip The IP address of the connection
+    # @param port The port of the connection
     ##
-    def gather_files(self, root_path):
-        downloads_path = os.path.join(root_path, CONSTANTS.META_FILES)
-
-        # Get all possible files
-        meta_files = []
-        print(os.listdir(downloads_path))
-        for file in os.listdir(downloads_path):
-            filepath = os.path.join(downloads_path, file)
-            is_file = os.path.isfile(filepath)
-            is_meta = file.endswith(FileConstants.METADATA_EXT)
-            if is_file and is_meta:
-                meta_files.append(filepath)
-
-        # Create appropriate downloaders if the file is not downloaded
-        for path in meta_files:
-            metadata = MetadataFile()
-            metadata.parse(path)
-            filepath = os.path.join(root_path, CONSTANTS.DOWNLOADS, metadata.filename)
-            if os.path.exists(filepath):
-                print(filepath)
-                uploader = Uploader(self, path, self.tracker_ip, self.tracker_port)
-                self.uploaders[uploader.file_id] = uploader
-
+    def add(self, ip, port):
+        if (ip, port) not in self.connections:
+            connection = UploadConnectionThread(self, ip, port)
+            self.connections[(ip, port)] = connection
+            connection.start()
         return
 
     ##
-    # Continuously accepts connections from downloaders looking for a fix
+    # Gets the proper connection for a provided IP address and port
+    #
+    # @param ip The IP address of the connection
+    # @param port The port of the connection
+    # @return The corresponding connection thread, if it exists
     ##
-    def server_loop(self):
-        return
+    def get(self, ip, port):
+        return self.connections[(ip, port)]
 
 
 ##

@@ -7,6 +7,7 @@ import os
 # @date Apr 3, 2015
 ##
 
+ROOT = ""
 MAPS = "tmp/maps/"
 META_FILES = "tmp/meta/"
 DOWNLOADS = "downloads/"

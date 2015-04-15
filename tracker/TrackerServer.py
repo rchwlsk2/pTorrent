@@ -7,6 +7,7 @@ import sys
 
 from tracker.TrackerConstants import TrackerConstants
 from tracker.DatabaseManager import DatabaseManager
+import CONSTANTS
 
 ##
 # A simple tracker server for the pTorrent project
@@ -31,7 +32,7 @@ class TrackerServer(object):
 
         self.db_path = db_path
         self.db_schema = db_schema
-        print(self.db_path , self.db_schema)
+        print(self.db_path, self.db_schema)
 
         self.db_manager = DatabaseManager(self.db_schema, self.db_path)
         if not os.path.exists(self.db_path):
@@ -39,6 +40,10 @@ class TrackerServer(object):
 
         # Exit handler
         signal.signal(signal.SIGINT, self.exit_handler)
+
+        # Make sure localhost runs properly
+        if host == CONSTANTS.LOCALHOST:
+            host = ""
 
         address = (host, port)
         self.sock = socket(AF_INET, SOCK_STREAM)

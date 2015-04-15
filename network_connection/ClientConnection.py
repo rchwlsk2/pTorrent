@@ -1,6 +1,7 @@
 import socket
 import json
 from network_connection.MessageConstants import *
+import CONSTANTS
 
 
 ##
@@ -19,6 +20,9 @@ class ClientConnection(object):
     ##
     def __init__(self, ip, port):
         self.ip = ip
+        if self.ip == CONSTANTS.LOCALHOST:
+            self.ip = ""
+
         self.port = port
 
         # Initialize socket

@@ -76,13 +76,15 @@ class DownloadConnectionThread(threading.Thread):
     ##
     def request(self, request):
         self.requests.append(request)
-        self.cv.notify()
+        with self.cv:
+            self.cv.notify()
         return
 
     ##
     # Overrides the default run function to queue downloads
     ##
     def run(self):
+        print("DOWNLOAD THREAD: ", self.ip, self.port)
         client_conn = ClientConnection(self.ip, self.port)
 
         while True:
@@ -97,7 +99,7 @@ class DownloadConnectionThread(threading.Thread):
             if not response:
                 continue
             else:
-                self.download_mgr.send_to_downloader(response)
+                self.download_mgr.send_to_downloader(self.ip, response)
 
         client_conn.terminate()
         return
