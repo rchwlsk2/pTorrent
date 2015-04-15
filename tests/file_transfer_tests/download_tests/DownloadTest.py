@@ -31,19 +31,19 @@ class TestDownload(unittest.TestCase):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.connect(('', 6045))
 
-        a_add_request = TrackerConstants.ADD + ameta_file.file_id + " localhost"
+        #a_add_request = TrackerConstants.ADD + ameta_file.file_id + " localhost"
         #sock.sendall(a_add_request.encode())
 
         sleep(0.1)
 
-        b_add_request = TrackerConstants.ADD + bmeta_file.file_id + " localhost"
+        #b_add_request = TrackerConstants.ADD + bmeta_file.file_id + " localhost"
         #sock.sendall(b_add_request.encode())
 
 
         #downloader = Downloader(meta, '', 6045)
         #downloader.start()
 
-        down_mgr = DownloadManager("", '', 6045)
+        down_mgr = DownloadManager("download_tests", '', 6045)
         print(down_mgr.conn_mgr.connections)
         down_mgr.resume_all()
 
