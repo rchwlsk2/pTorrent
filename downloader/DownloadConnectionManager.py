@@ -30,7 +30,7 @@ class DownloadConnectionManager(object):
     ##
     def add(self, ip, port):
         if (ip, port) not in self.connections:
-            connection = DownloadConnectionThread(self, ip, port)
+            connection = DownloadConnectionThread(self.download_mgr, ip, port)
             self.connections[(ip, port)] = connection
             connection.start()
         return
@@ -94,7 +94,8 @@ class DownloadConnectionThread(threading.Thread):
             self.cv.release()
 
             request = self.requests.pop()
-            response = self.client_conn.send_request(request[0], request[1], request[2])
+            response = client_conn.send_request(request[0], request[1], request[2])
+            print("Response gotten", response)
 
             if not response:
                 continue

@@ -1,5 +1,3 @@
-import os
-
 ##
 # List of paths to particular files and folders to be used globally
 #
@@ -14,7 +12,7 @@ DOWNLOADS = "downloads/"
 
 LOCALHOST = "localhost"
 
-PORT = 36969
+PORT = 36981
 BUFFER_SIZE = 1024
 UPDATE_INTERVAL = 3
 

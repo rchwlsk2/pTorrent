@@ -103,13 +103,13 @@ class Downloader(object):
     def add_data(self, ip, json_dict):
         if json_dict[MessageConstants.FILE] == self.file_id:
             offset = json_dict[MessageConstants.OFFSET]
-            data = json_dict[MessageConstants.DATA]
-
+            data = json_dict[MessageConstants.DATA].encode()
             with self.file_lock:
+                print("Writing to file")
                 self.file.write(offset, data)
-
+                print("File written to")
             thread = self.ip_threads[ip]
-            thread.cv.notify()
+            thread.wake()
         return
 
 
@@ -143,7 +143,8 @@ class DownloaderThread(threading.Thread):
     ##
     def wake(self):
         self.should_wake = True
-        self.cv.notify()
+        with self.cv:
+            self.cv.notify()
         return
 
     ##
@@ -161,6 +162,7 @@ class DownloaderThread(threading.Thread):
             download_mgr = self.downloader.download_mgr
             connection_thread = download_mgr.conn_mgr.get(self.ip, self.port)
             connection_thread.request(file_request)
+            print("Sent request", file_request)
 
             with self.cv:
                 while not self.should_wake:

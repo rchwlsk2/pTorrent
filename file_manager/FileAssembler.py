@@ -1,4 +1,5 @@
 import os
+import binascii
 from file_manager.FileMap import FileMap
 from file_manager.MetadataFile import MetadataFile
 from file_manager.FileConstants import *
@@ -19,13 +20,15 @@ class FileAssembler(object):
     # @param metadata_file The file path to the metadata file
     ##
     def __init__(self, metadata_file):
+        path_root = metadata_file.split(CONSTANTS.META_FILES)[0]
+        print(path_root, metadata_file)
         self.metadata = MetadataFile()
         self.metadata = self.metadata.parse(metadata_file)
 
         self.filename = self.metadata.filename + "." + TEMP_EXT
-        self.file_path = CONSTANTS.DOWNLOADS + self.filename
+        self.file_path = path_root + CONSTANTS.DOWNLOADS + self.filename
 
-        map_name = CONSTANTS.MAPS + self.metadata.file_id + "." + MAP_EXT
+        map_name = path_root + CONSTANTS.MAPS + self.metadata.file_id + "." + MAP_EXT
         self.map = FileMap(map_name, self.metadata.size, self.metadata.piece_size)
 
         # Initialize map file and empty file
@@ -88,8 +91,11 @@ class FileAssembler(object):
     # @param data The data to write to the file
     ##
     def write(self, offset, data):
-        if len(data) != self.metadata.piece_size:
-            return
+        #if len(data) != self.metadata.piece_size:
+        #    return
+        print("DATAR", data)
+        data = binascii.unhexlify(data)
+        print("Writing to", self.file_path, data)
 
         with open(self.file_path, "rb+") as file:
             file.seek(offset)
@@ -97,4 +103,5 @@ class FileAssembler(object):
 
         # Mark complete
         self.map.set_complete(offset / self.metadata.piece_size)
+        self.map.save()
         return

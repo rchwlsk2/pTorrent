@@ -35,7 +35,7 @@ class DownloadManager(object):
 
         # Get all possible files
         meta_files = []
-        print(os.listdir(downloads_path))
+        print(os.listdir(os.path.abspath(downloads_path)))
         for file in os.listdir(downloads_path):
             filepath = os.path.join(downloads_path, file)
             is_file = os.path.isfile(filepath)
@@ -79,6 +79,7 @@ class DownloadManager(object):
     def send_to_downloader(self, ip, json_response):
         file_id = json_response[MessageConstants.FILE]
         downloader = self.downloaders[file_id]
+        print(self.downloaders, downloader)
         if downloader is not None:
             downloader.add_data(ip, json_response)
         return

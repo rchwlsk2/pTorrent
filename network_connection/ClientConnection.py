@@ -58,13 +58,22 @@ class ClientConnection(object):
     def send_request(self, file_id, offset, length):
         message = ClientConnection.create_request(file_id, offset, length)
         self.sock.send(message.encode())
+        print("Sent request json:", message)
 
         # Read entire response
-        response = ""
-        part = None
-        while part != "":
-            part = self.sock.recv(2048).decode()
+        size = int(self.sock.recv(16).decode())
+        print("Received size", size)
+
+        response = b""
+        while size:
+            part = self.sock.recv(CONSTANTS.BUFFER_SIZE)
+            if not part:
+                continue
             response += part
+            size -= len(part)
+        print(response.decode())
+        response = response.decode()
+
 
         # Check that response is proper
         if response:

@@ -1,4 +1,5 @@
 import json
+import binascii
 from network_connection.MessageConstants import *
 
 ##
@@ -35,8 +36,13 @@ class ServerConnection(object):
     # @param length The length of the file
     ##
     def send_response(self, file, file_id, offset, length):
-        message = ServerConnection.create_response(file, file_id, offset, length)
-        self.connection.send(message.encode())
+        message = ServerConnection.create_response(file, file_id, offset, length).encode('unicode_escape')
+        message_size = len(message)
+        size_str = "{:16d}".format(message_size)
+        print("Uploader response", size_str, message)
+
+        self.connection.send(size_str.encode())
+        self.connection.sendall(message)
         return
 
     ##
@@ -52,13 +58,14 @@ class ServerConnection(object):
     def create_response(file, file_id, offset, length):
         with open(file, "rb") as data_file:
             data_file.seek(offset)
-            data_bytes = data_file.read(length).decode()
+            data_bytes = data_file.read(length)
+        data = binascii.hexlify(data_bytes).decode()
 
         response_dict = {
             TYPE: TYPE_DATA,
             FILE: file_id,
             OFFSET: offset,
             SIZE: length,
-            DATA: data_bytes
+            DATA: data
         }
         return json.dumps(response_dict)

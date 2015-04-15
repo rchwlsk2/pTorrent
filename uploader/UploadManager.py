@@ -1,7 +1,12 @@
 import os
 import threading
+import json
+import signal
+import sys
+from socket import *
+from socket import error as sock_err
 
-from uploader.Uploader import Uploader
+from network_connection import ServerConnection, MessageConstants
 from file_manager import MetadataFile, FileConstants
 import CONSTANTS
 
@@ -15,17 +20,51 @@ import CONSTANTS
 class UploadManager(object):
 
     ##
-    # Initializes dictionary of downloaders and a DCM
+    # Initializes dictionary of files and connections and starts accepting server connections
     ##
     def __init__(self, root_path, tracker_ip, tracker_port):
         self.tracker_ip = tracker_ip
         self.tracker_port = tracker_port
 
-        self.uploaders = {}         # Key is the file ID
+        self.files = {}             # Key is the file ID
         self.connections = {}       # Key is the IP
 
         self.gather_files(root_path)
+
+        # Exit handler
+        signal.signal(signal.SIGINT, self.exit_handler)
+
+        # Make sure localhost runs properly
+        if tracker_ip == CONSTANTS.LOCALHOST:
+            tracker_ip = ""
+
+        address = (tracker_ip, tracker_port)
+        self.sock = socket(AF_INET, SOCK_STREAM)
+        self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+
+        print("Starting uploads... ")
+        try:
+            self.sock.bind(address)
+        except sock_err as e:
+            print('Socket bind for uploader failed. Error Code: ' + str(e))
+            sys.exit()
+
+        hostname = tracker_ip if tracker_ip != '' else "localhost"
+        print("Server is running at " + hostname + ":" + str(tracker_port) + "\n")
+        self.sock.listen(10)
+
+        # Start the server loop
+        self.server_loop()
+
+        self.sock.close()
         return
+
+    ##
+    # Exit SIGINT handler (ctrl+c)
+    ##
+    def exit_handler(self, signum, frame):
+        print("\nUploads stopped!")
+        sys.exit(0)
 
     ##
     # Gets a list of all files that have been downloaded and creates uploaders for them
@@ -50,8 +89,8 @@ class UploadManager(object):
             filepath = os.path.join(root_path, CONSTANTS.DOWNLOADS, metadata.filename)
             if os.path.exists(filepath):
                 print(filepath)
-                uploader = Uploader(self, path, self.tracker_ip, self.tracker_port)
-                self.uploaders[uploader.file_id] = uploader
+                #uploader = Uploader(self, path, self.tracker_ip, self.tracker_port)
+                self.files[metadata.file_id] = filepath
 
         return
 
@@ -59,6 +98,11 @@ class UploadManager(object):
     # Continuously accepts connections from downloaders looking for a fix
     ##
     def server_loop(self):
+        while True:
+            connection, address = self.sock.accept()
+            print('Connected with ' + address[0] + ':' + str(address[1]))
+
+            UploadConnectionThread(self, connection).start()
         return
 
 
@@ -74,48 +118,41 @@ class UploadConnectionThread(threading.Thread):
     # @param ip The IP address of the host
     # @param port The port of the host
     ##
-    def __init__(self, download_mgr, ip, port):
+    def __init__(self, upload_mgr, connection):
         super().__init__(group=None, target=None, name=None, args=(), kwargs={})
 
-        self.download_mgr = download_mgr
-        self.ip = ip
-        self.port = port
-
-        self.cv = threading.Condition()     # Condition variable to signal when a thread should send a request
-        self.requests = []              # Queue of requests to process (request is (file_id, offset, piece_size) tuple)
+        self.upload_mgr = upload_mgr
+        self.connection = connection
         return
 
     ##
-    # Function that a user calls to request a piece of a file
-    #
-    # @param request The request tuple of the form (file_id, offset, piece_size)
-    ##
-    def request(self, request):
-        self.requests.append(request)
-        with self.cv:
-            self.cv.notify()
-        return
-
-    ##
-    # Overrides the default run function to queue downloads
+    # Overrides the default run function to uploads parts of files
     ##
     def run(self):
-        print("DOWNLOAD THREAD: ", self.ip, self.port)
-        client_conn = ServerConnection(self.ip, self.port)
+        print("UPLOAD THREAD")
+        connection = ServerConnection(self.connection)
 
         while True:
-            self.cv.acquire()
-            while len(self.requests) == 0:
-                self.cv.wait()
-            self.cv.release()
+            # Read entire request
+            request = ""
+            #part = None
+            #while part != "":
+            #    part = self.connection.recv(CONSTANTS.BUFFER_SIZE).decode()
+            #    request += part
+            request = self.connection.recv(CONSTANTS.BUFFER_SIZE).decode()
 
-            request = self.requests.pop()
-            response = self.client_conn.send_request(request[0], request[1], request[2])
+            # Check that request is proper
+            if request is not "":
+                request_dict = json.loads(request)
+                print("Received request", request_dict)
 
-            if not response:
-                continue
-            else:
-                self.download_mgr.send_to_downloader(self.ip, response)
+                file_id = request_dict[MessageConstants.FILE]
+                offset = request_dict[MessageConstants.OFFSET]
+                length = request_dict[MessageConstants.SIZE]
 
-        client_conn.terminate()
+                if file_id in self.upload_mgr.files:
+                    file = self.upload_mgr.files[file_id]
+                    connection.send_response(file, file_id, offset, length)
+
+        connection.terminate()
         return
