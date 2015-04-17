@@ -1,5 +1,8 @@
 import unittest
-from file_manager import FileMap
+import os
+
+from client.file_manager import FileMap
+
 
 
 ##
@@ -62,6 +65,7 @@ class TestFileMap(unittest.TestCase):
         self.assertEqual(len(mapb.map), 1, "Incorrect map length")
         self.assertEqual(mapb.map[0], 0, "Map is not null")
 
+        os.remove(filename)
         return
 
     ##

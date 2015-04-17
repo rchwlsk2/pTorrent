@@ -1,7 +1,9 @@
 import unittest
 import os
 import filecmp
-from file_manager.FileAssembler import FileAssembler
+
+from client.file_manager.FileAssembler import FileAssembler
+
 
 
 ##

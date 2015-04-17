@@ -4,8 +4,7 @@ from tests import *
 # Code to run all test cases found on
 # http://stackoverflow.com/questions/5360833/how-to-run-multiple-classes-in-single-test-suite-in-python-unit-testing
 
-test_classes_to_run = [TestDatabase,
-                       TestFileUtils, TestMetadataFile,
+test_classes_to_run = [TestFileUtils, TestMetadataFile,
                        TestFileMap, TestFileAssembler]
 
 loader = unittest.TestLoader()

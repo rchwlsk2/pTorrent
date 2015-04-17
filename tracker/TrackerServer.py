@@ -5,9 +5,8 @@ import os
 import signal
 import sys
 
-from tracker.TrackerConstants import TrackerConstants
-from tracker.DatabaseManager import DatabaseManager
-import CONSTANTS
+from TrackerConstants import *
+from DatabaseManager import DatabaseManager
 
 ##
 # A simple tracker server for the pTorrent project
@@ -42,7 +41,7 @@ class TrackerServer(object):
         signal.signal(signal.SIGINT, self.exit_handler)
 
         # Make sure localhost runs properly
-        if host == CONSTANTS.LOCALHOST:
+        if host == LOCALHOST:
             host = ""
 
         address = (host, port)
@@ -101,8 +100,8 @@ class TrackerServer(object):
             if data.startswith(TrackerConstants.ADD):
                 data = data[len(TrackerConstants.ADD):]
                 split = data.split(" ")
-                if len(split) == 2:
-                    self.db_manager.add(split[0], split[1])
+                if len(split) == 3:
+                    self.db_manager.add(split[0], split[1], split[2])
                     connection.send(str.encode(TrackerConstants.ADD_SUCCESS))
                 else:
                     connection.send(str.encode(TrackerConstants.ADD_FAIL))
@@ -120,8 +119,10 @@ class TrackerServer(object):
                 data = data[len(TrackerConstants.GET):]
                 ips = self.db_manager.get(data)
                 if len(ips) > 0:
-                    ip_str = "-".join(ips)
-                    connection.send(str.encode(ip_str))
+                    ip_str = ""
+                    for pair in ips:
+                        ip_str += pair[0] + ":" + str(pair[1]) + "-"
+                    connection.send(str.encode(ip_str.strip("-")))
                 else:
                     connection.send(str.encode(TrackerConstants.GET_FAIL))
 

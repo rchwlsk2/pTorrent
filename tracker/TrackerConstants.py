@@ -1,3 +1,11 @@
+ROOT = "tracker/"
+DEBUG_DB = "tracker/tests/data/tracker.db"
+DEBUG_SCHEMA = "tracker/tests/data/schema.sql"
+
+NORMAL_DB = "data/tracker.db"
+DB_SCHEMA = "data/schema.sql"
+
+LOCALHOST = ""
 
 
 ##

@@ -1,6 +1,8 @@
 import unittest
 import os
-from file_manager import MetadataFile
+
+from client.file_manager import MetadataFile
+
 
 
 ##

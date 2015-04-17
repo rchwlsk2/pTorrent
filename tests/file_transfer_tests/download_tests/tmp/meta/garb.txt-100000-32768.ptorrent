@@ -1,6 +1,6 @@
 {
     "size": 100000,
-    "tracker": "localhost",
+    "tracker": "54.200.76.207:6045",
     "piece_size": 32768,
     "name": "garb.txt",
     "id": "garb.txt-100000-32768"

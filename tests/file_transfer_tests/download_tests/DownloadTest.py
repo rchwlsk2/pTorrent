@@ -2,9 +2,10 @@ import unittest
 import socket
 from time import sleep
 
-from file_manager import MetadataFile
-from downloader import Downloader, DownloadManager
+from client.file_manager import MetadataFile
+from client.downloader import DownloadManager
 from tracker import TrackerConstants
+
 
 
 ##

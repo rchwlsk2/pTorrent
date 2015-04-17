@@ -1,5 +1,7 @@
 import socket
-from network_connection import ClientConnection
+
+from client.network_connection import ClientConnection
+
 
 # Create socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

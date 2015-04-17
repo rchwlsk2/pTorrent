@@ -1,9 +1,10 @@
-from file_manager.FileUtils import FileUtils
-import CONSTANTS
 import unittest
 import os
 import shutil
 import filecmp
+
+from client.file_manager.FileUtils import FileUtils
+
 
 class TestFileUtils(unittest.TestCase):
 

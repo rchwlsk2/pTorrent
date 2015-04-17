@@ -1,8 +1,10 @@
 import unittest
 import socket
 import json
-import network_connection as nc
-from network_connection import ServerConnection
+
+from client import network_connection as nc
+from client.network_connection import ServerConnection
+
 
 
 ##
