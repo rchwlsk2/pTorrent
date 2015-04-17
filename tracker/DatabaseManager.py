@@ -92,7 +92,7 @@ class DatabaseManager:
             # Prevents SQL injection via prepared statement
             db_cursor = db_conn.cursor()
             db_cursor.execute('SELECT IP, Port FROM tracker WHERE File = ?',
-                                [file_id])
+                              [file_id])
 
             rows = db_cursor.fetchall()
             for row in rows:
