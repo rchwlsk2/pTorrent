@@ -52,11 +52,11 @@ class DatabaseManager:
     # @param file_id The ID of the file in the table
     # @param ip The IP address of the client
     ##
-    def add(self, file_id, ip):
+    def add(self, file_id, ip, port):
         with closing(self.connect_db()) as db_conn:
             # Prevents SQL injection via prepared statement
-            db_conn.cursor().execute('INSERT INTO tracker (File, IP) VALUES (?, ?)',
-                                [file_id, ip])
+            db_conn.cursor().execute('INSERT INTO tracker (File, IP, Port) VALUES (?, ?, ?)',
+                                [file_id, ip, port])
             db_conn.commit()
         return
 
@@ -91,11 +91,11 @@ class DatabaseManager:
         with closing(self.connect_db()) as db_conn:
             # Prevents SQL injection via prepared statement
             db_cursor = db_conn.cursor()
-            db_cursor.execute('SELECT IP FROM tracker WHERE File = ?',
+            db_cursor.execute('SELECT IP, Port FROM tracker WHERE File = ?',
                                 [file_id])
 
             rows = db_cursor.fetchall()
             for row in rows:
-                ips.append(row[0])
+                ips.append((row[0], row[1]))
 
         return ips
