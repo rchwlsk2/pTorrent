@@ -38,7 +38,7 @@ class ServerConnection(object):
     # @param length The length of the file
     ##
     def send_response(self, file, file_id, offset, length):
-        metadata, data = ServerConnection.create_response(file, file_id, offset, length).encode('unicode_escape')
+        metadata, data = ServerConnection.create_response(file, file_id, offset, length)
         meta_size = len(metadata.encode())
         total_size = meta_size + len(data)
 
@@ -47,9 +47,8 @@ class ServerConnection(object):
 
         print("Uploader response: ", total_size_str, meta_size_str, metadata, data)
 
-        self.connection.send(total_size_str.encode())
-        self.connection.send(meta_size_str.encode())
-        self.connection.sendall(metadata.encode())
+        message_str = total_size_str + meta_size_str + metadata
+        self.connection.sendall(message_str.encode())
         self.connection.sendall(data)
         return
 

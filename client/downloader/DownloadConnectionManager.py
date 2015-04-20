@@ -102,7 +102,8 @@ class DownloadConnectionThread(threading.Thread):
             if not metadata or not file_data:
                 continue
             else:
-                self.download_mgr.send_to_downloader(self.ip, metadata, file_data)
+                ip_key = self.ip + ":" + str(self.port)
+                self.download_mgr.send_to_downloader(ip_key, metadata, file_data)
 
         client_conn.terminate()
         return

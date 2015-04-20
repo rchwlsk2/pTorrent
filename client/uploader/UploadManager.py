@@ -1,6 +1,7 @@
 import threading
 import json
 import signal
+import os
 from socket import *
 from socket import error as sock_err
 
@@ -41,7 +42,7 @@ class UploadManager(object):
         if tracker_ip == CONSTANTS.LOCALHOST:
             tracker_ip = ""
 
-        address = (tracker_ip, tracker_port)
+        address = ("", 10000)
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
@@ -68,6 +69,12 @@ class UploadManager(object):
     def exit_handler(self, signum, frame):
         print("\nUploads stopped!")
         sys.exit(0)
+
+    ##
+    # Registers a given file with the tracker
+    ##
+    def register_file(self):
+        return
 
     ##
     # Gets a list of all files that have been downloaded and creates uploaders for them

@@ -74,10 +74,10 @@ class ClientConnection(object):
                 continue
             response += part
             total_size -= len(part)
-        print(response.decode())
         metadata = response[:meta_size].decode()
         byte_data = response[meta_size:]
 
+        print("Received", metadata, byte_data)
 
         # Check that response is proper
         if response:

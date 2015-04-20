@@ -92,9 +92,6 @@ class FileAssembler(object):
     # @param data The data to write to the file
     ##
     def write(self, offset, data):
-        if len(data) != self.metadata.piece_size:
-            return
-
         with open(self.file_path, "rb+") as file:
             file.seek(offset)
             file.write(data)

@@ -1,5 +1,6 @@
 import threading
 import socket
+import os
 
 from client.file_manager import FileAssembler
 from tracker.TrackerConstants import *
@@ -23,15 +24,16 @@ class Downloader(object):
     # @param download_mgr The DownloadManager to use to interface with the connection manager
     # @param metadata The path to the metadata file
     ##
-    def __init__(self, download_mgr, metadata, tracker_ip, tracker_port):
+    def __init__(self, download_mgr, metadata):
         self.download_mgr = download_mgr
 
         self.file = FileAssembler(metadata)
         self.file_lock = threading.Lock()
 
         self.file_id = self.file.metadata.file_id
-        self.tracker_ip = tracker_ip
-        self.tracker_port = tracker_port
+        tracker = self.file.metadata.tracker.split(":")
+        self.tracker_ip = tracker[0]
+        self.tracker_port = int(tracker[1])
 
         self.ip_threads = {}
         self.ips = []
@@ -76,22 +78,31 @@ class Downloader(object):
             if response == TrackerConstants.CONNECT_SUCCESS:
                 sock.send(message.encode())
                 ip_str = sock.recv(CONSTANTS.BUFFER_SIZE).decode()
-                new_ips = ip_str.split(" ")
+                if ip_str == "get failed":
+                    return
+                new_ips = ip_str.split("-")
                 print("Tracker response: " + str(new_ips))
 
             # Setup connection to tracker
             for ip in new_ips:
                 if ip not in self.ips:
-                    thread = DownloaderThread(self, ip, CONSTANTS.PORT)
+                    split_ip = ip.split(":")
+                    thread = DownloaderThread(self, split_ip[0], int(split_ip[1]))
                     self.ip_threads[ip] = thread
-                    self.download_mgr.conn_mgr.add(ip, CONSTANTS.PORT)
+                    self.download_mgr.conn_mgr.add(split_ip[0], int(split_ip[1]))
                     thread.start()
 
-            for file_id, cur_thread in self.ip_threads.items():
+            to_delete = []
+            for file_id in self.ip_threads.keys():
+                cur_thread = self.ip_threads[file_id]
+                addr = cur_thread.ip + ":" + str(cur_thread.port)
                 if cur_thread.ip not in new_ips:
-                    cur_thread.exit()
-                    new_ips.remove(cur_thread.ip)
-                    del self.ip_threads[file_id]
+                    cur_thread.join()
+                    #new_ips.remove(cur_thread.ip)
+                    to_delete.append(file_id)
+
+            for file_id in to_delete:
+                del self.ip_threads[file_id]
 
             self.ips = new_ips
             sock.close()
@@ -105,10 +116,16 @@ class Downloader(object):
     def add_data(self, ip, metadata, file_data):
         if metadata[MessageConstants.FILE] == self.file_id:
             offset = metadata[MessageConstants.OFFSET]
+
             with self.file_lock:
                 print("Writing to file")
                 self.file.write(offset, file_data)
-                print("File written to")
+                print("File written to", self.file.map.map)
+                if self.file.is_downloaded():
+                    self.file.convert_to_full()
+                    os.remove(self.file.map.filename)
+
+            print(self.ip_threads)
             thread = self.ip_threads[ip]
             thread.wake()
         return

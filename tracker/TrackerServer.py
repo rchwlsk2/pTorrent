@@ -5,8 +5,8 @@ import os
 import signal
 import sys
 
-from TrackerConstants import *
-from DatabaseManager import DatabaseManager
+from tracker.TrackerConstants import *
+from tracker.DatabaseManager import DatabaseManager
 
 ##
 # A simple tracker server for the pTorrent project

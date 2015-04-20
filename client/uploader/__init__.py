@@ -1,3 +1,3 @@
-from client.uploader import UploadManager
+from client.uploader.UploadManager import UploadManager
 
 __author__ = 'paulrachwalski'
