@@ -71,7 +71,7 @@ class UploadManager(object):
     ##
     # Starts the uploading
     ##
-    def start(self):
+    def resume_all(self):
         self.server_thread.start()
         return
 
