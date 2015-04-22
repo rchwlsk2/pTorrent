@@ -1,7 +1,7 @@
 import os
 
 from client.downloader import Downloader, DownloadConnectionManager
-from client.file_manager import MetadataFile
+from client.file_manager import MetadataFile, FileConstants
 from client.network_connection import MessageConstants
 import client.CONSTANTS as CONSTANTS
 
@@ -24,7 +24,35 @@ class DownloadManager(object):
         self.downloaders = {}                               # Key is the file ID
         self.conn_mgr = DownloadConnectionManager(self)
 
-        self.root_path
+        self.gather_files(root_path)
+        return
+
+    ##
+    # Gets a list of all files that have not been downloaded yet and creates downloaders for them
+    ##
+    def gather_files(self, root_path):
+        downloads_path = os.path.join(root_path, CONSTANTS.META_FILES)
+
+        # Get all possible files
+        meta_files = []
+        print(os.listdir(os.path.abspath(downloads_path)))
+        for file in os.listdir(downloads_path):
+            filepath = os.path.join(downloads_path, file)
+            is_file = os.path.isfile(filepath)
+            is_meta = file.endswith(FileConstants.METADATA_EXT)
+            if is_file and is_meta:
+                meta_files.append(filepath)
+
+        # Create appropriate downloaders if the file is not downloaded
+        for path in meta_files:
+            metadata = MetadataFile()
+            metadata.parse(path)
+            filepath = os.path.join(root_path, CONSTANTS.DOWNLOADS, metadata.filename)
+            if not os.path.exists(filepath):
+                print(filepath)
+                downloader = Downloader(self, path)
+                self.downloaders[downloader.file_id] = downloader
+
         return
 
     ##
@@ -33,10 +61,11 @@ class DownloadManager(object):
     def add_file(self, path):
         metadata = MetadataFile()
         metadata.parse(path)
-        filepath = os.path.join(CONSTANTS.ROOT, CONSTANTS.DOWNLOADS, metadata.filename)
-        if not os.path.exists(filepath):
-            downloader = Downloader(self, path)
-            self.downloaders[downloader.file_id] = downloader
+        if metadata.file_id not in self.downloaders.keys():
+            filepath = os.path.join(CONSTANTS.ROOT, CONSTANTS.DOWNLOADS, metadata.filename)
+            if not os.path.exists(filepath):
+                downloader = Downloader(self, filepath)
+                self.downloaders[downloader.file_id] = downloader
 
         return
 

@@ -24,6 +24,7 @@ class FileMap(object):
         self.size = size
         self.bits = int(math.ceil(self.size / piece_size))
         self.bytes = int(math.ceil(self.bits / 8))
+        self.progress = 0
         return
 
     ##
@@ -42,6 +43,12 @@ class FileMap(object):
         with open(self.filename, 'rb') as map_file:
             data = map_file.read()
         self.map = bytearray(data)
+
+        for bite in range(0, self.bytes):
+            for shift in range(0, 8):
+                if (1 << shift) & (self.map[bite]):
+                    self.progress += 1
+
         return
 
     ##
@@ -52,29 +59,14 @@ class FileMap(object):
             map_file.write(self.map)
         return
 
+    def get_progress(self):
+        return self.progress / self.bits
+
     ##
     # Checks that the map is complete and no pieces are missing
     ##
     def is_complete(self):
-        if len(self.in_progress) != 0:
-            return False
-
-        # Check all but last byte
-        if self.bytes > 1:
-            for i in range(0, self.bytes - 1):
-                if self.map[i] != 255:
-                    return False
-
-        # Check last byte
-        should_be_set = self.bits % 8
-        if should_be_set == 0:
-            should_be_set = 8
-
-        expected_val = 255 >> (8 - should_be_set)
-        if self.map[self.bytes - 1] != expected_val:
-            return False
-
-        return True
+        return self.progress == self.bits
 
     ##
     # Sets a bit to be in progress
@@ -93,6 +85,7 @@ class FileMap(object):
         mask = 1 << bit_off
         self.map[byte_off] |= mask
 
+        self.progress += 1
         self.in_progress.remove(bit)
         return
 

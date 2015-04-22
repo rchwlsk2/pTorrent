@@ -64,7 +64,6 @@ class Downloader(object):
             new_ips = []
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            print(self.file_id + " : refreshing")
 
             # Restart timer
             threading.Timer(CONSTANTS.UPDATE_INTERVAL, self.ip_refresh).start()
@@ -81,7 +80,6 @@ class Downloader(object):
                 if ip_str == "get failed":
                     return
                 new_ips = ip_str.split("-")
-                print("Tracker response: " + str(new_ips))
 
             # Setup connection to tracker
             for ip in new_ips:
@@ -120,14 +118,15 @@ class Downloader(object):
             with self.file_lock:
                 print("Writing to file")
                 self.file.write(offset, file_data)
-                print("File written to", self.file.map.map)
+                print("File written to, map:", self.file.map.map, "complete?", self.file.is_downloaded())
                 if self.file.is_downloaded():
                     self.file.convert_to_full()
                     os.remove(self.file.map.filename)
 
-            print(self.ip_threads)
-            thread = self.ip_threads[ip]
-            thread.wake()
+            if ip in self.ip_threads.keys():
+                thread = self.ip_threads[ip]
+                if thread.isAlive():
+                    thread.wake()
         return
 
 
@@ -180,7 +179,6 @@ class DownloaderThread(threading.Thread):
             download_mgr = self.downloader.download_mgr
             connection_thread = download_mgr.conn_mgr.get(self.ip, self.port)
             connection_thread.request(file_request)
-            print("Sent request", file_request)
 
             with self.cv:
                 while not self.should_wake:

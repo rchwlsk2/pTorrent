@@ -22,7 +22,6 @@ class FileAssembler(object):
     # @param metadata_file The file path to the metadata file
     ##
     def __init__(self, metadata_file):
-        print(CONSTANTS.ROOT, metadata_file)
         self.metadata = MetadataFile()
         self.metadata = self.metadata.parse(metadata_file)
 
