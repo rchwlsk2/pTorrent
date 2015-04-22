@@ -24,8 +24,10 @@ class Downloader(object):
     # @param download_mgr The DownloadManager to use to interface with the connection manager
     # @param metadata The path to the metadata file
     ##
-    def __init__(self, download_mgr, metadata):
+    def __init__(self, download_mgr, metadata, done_callback):
         self.download_mgr = download_mgr
+        self.metadata_path = metadata
+        self.done_callback = done_callback
 
         self.file = FileAssembler(metadata)
         self.file_lock = threading.Lock()
@@ -47,6 +49,11 @@ class Downloader(object):
     def start(self):
         self.should_run = True
         threading.Thread(target=self.ip_refresh).start()
+
+        for ip in self.ip_threads.keys():
+            thread = self.ip_threads[ip]
+            if thread.isAlive():
+                thread.wake()
         return
 
     ##
@@ -93,10 +100,8 @@ class Downloader(object):
             to_delete = []
             for file_id in self.ip_threads.keys():
                 cur_thread = self.ip_threads[file_id]
-                addr = cur_thread.ip + ":" + str(cur_thread.port)
                 if cur_thread.ip not in new_ips:
                     cur_thread.join()
-                    #new_ips.remove(cur_thread.ip)
                     to_delete.append(file_id)
 
             for file_id in to_delete:
@@ -118,12 +123,14 @@ class Downloader(object):
             with self.file_lock:
                 print("Writing to file")
                 self.file.write(offset, file_data)
-                print("File written to, map:", self.file.map.map, "complete?", self.file.is_downloaded())
+                print("File written to, progress:", self.file.map.get_progress()*100, "%")
                 if self.file.is_downloaded():
                     self.file.convert_to_full()
                     os.remove(self.file.map.filename)
+                    self.done_callback(self.file_id, self.metadata_path)
+                    return
 
-            if ip in self.ip_threads.keys():
+            if self.should_run and ip in self.ip_threads.keys():
                 thread = self.ip_threads[ip]
                 if thread.isAlive():
                     thread.wake()

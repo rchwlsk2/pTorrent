@@ -1,11 +1,16 @@
 import os
 import zipfile
 
+import client.CONSTANTS as CONSTANTS
+from client.file_manager.FileConstants import *
+from client.file_manager.MetadataFile import MetadataFile
+
 try:
     import zlib
     compression = zipfile.ZIP_DEFLATED
 except ImportError:
     compression = zipfile.ZIP_STORED
+
 
 ##
 # Utilities common to the file management of the pTorrent client
@@ -78,3 +83,39 @@ class FileUtils(object):
     @staticmethod
     def create_checksum(file_path):
         return
+
+    ##
+    # Picks through all files in Downloads and adds them to the appropriate lists
+    #
+    # @param downloads_path The path to the downloads folder
+    # @return A pair of lists where the first is download files and the second is upload files
+    ##
+    @staticmethod
+    def gather_files(root_path):
+        meta_path = os.path.join(root_path, CONSTANTS.META_FILES)
+        downloads_path = os.path.join(root_path, CONSTANTS.DOWNLOADS)
+
+        downloads = []
+        uploads = []
+
+        # Get all possible files
+        meta_files = []
+        for file in os.listdir(meta_path):
+            file_path = os.path.join(meta_path, file)
+
+            is_file = os.path.isfile(file_path)
+            is_meta = file.endswith(METADATA_EXT)
+            if is_file and is_meta:
+                meta_files.append(file_path)
+
+        # Place files in appropriate list
+        for path in meta_files:
+            metadata = MetadataFile()
+            metadata.parse(path)
+            file_path = os.path.join(downloads_path, metadata.filename)
+            if not os.path.exists(file_path):
+                downloads.append(path)
+            else:
+                uploads.append(path)
+
+        return downloads, uploads

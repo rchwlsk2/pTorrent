@@ -94,10 +94,16 @@ class UploadManager(object):
         print("Adding... ", path)
         metadata = MetadataFile()
         metadata.parse(path)
-        filepath = os.path.join(self.root_path, CONSTANTS.DOWNLOADS, metadata.filename)
+        if metadata.file_id not in self.files.keys():
+            filepath = os.path.join(self.root_path, CONSTANTS.DOWNLOADS, metadata.filename)
+            if os.path.exists(filepath):
+                self.tracker_conn.add(metadata.file_id, self.upload_ip, self.upload_port)
+                self.files[metadata.file_id] = filepath
+        return
 
-        self.tracker_conn.add(metadata.file_id, self.upload_ip, self.upload_port)
-        self.files[metadata.file_id] = filepath
+    def deregister_file(self, file_id):
+        if file_id in self.files.keys():
+            del self.files[file_id]
         return
 
     ##

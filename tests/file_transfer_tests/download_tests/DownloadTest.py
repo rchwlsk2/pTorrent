@@ -1,10 +1,7 @@
 import unittest
-import socket
-from time import sleep
 
-from client.file_manager import MetadataFile
+from client.file_manager import FileUtils
 from client.downloader import DownloadManager
-from tracker import TrackerConstants
 
 
 ##
@@ -18,9 +15,16 @@ class TestDownload(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_something(self):
-        down_mgr = DownloadManager("client")
-        print(down_mgr.conn_mgr.connections)
-        down_mgr.resume_all()
+    def done_callback(self, ):
+        return
 
+    def test_something(self):
+        down_mgr = DownloadManager("client", self.done_callback)
+        print(down_mgr.conn_mgr.connections)
+
+        downloads, uploads = FileUtils.gather_files("client")
+        for meta in downloads:
+            down_mgr.register_file(meta)
+
+        down_mgr.resume_all()
         return
