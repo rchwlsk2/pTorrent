@@ -18,5 +18,5 @@ class TestUpload(unittest.TestCase):
         pass
 
     def test_something(self):
-        up_mgr = UploadManager("", 10000, "54.200.76.207", 6045)
+        up_mgr = UploadManager("", 10005, "54.200.76.207", 6045)
         return

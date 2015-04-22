@@ -8,7 +8,7 @@ from client.network_connection import ClientConnection
 
 ##
 # Test the ClientConnection class for the P2P functionality
-# NOTE: To execute tests, run echo_server.py, and then run this file
+# NOTE: To execute tests, run client_test_server.py, and then run this file
 #
 # @author Paul Rachwalski
 # @date Apr 2, 2015
@@ -46,10 +46,11 @@ class TestClientConnection(unittest.TestCase):
         offset = 12
         length = 4
 
-        message_sent = client.send_request(file_id, offset, length)
+        meta_resp, bytes_resp = client.send_request(file_id, offset, length)
 
         message_gen = json.loads(client.create_request(file_id, offset, length))
 
-        self.assertEqual(message_gen, message_sent, "Incorrect message sent")
+        self.assertEqual(meta_resp, message_gen, "Incorrect message sent")
+        self.assertEqual(bytes_resp, b'', "Incorrect bytes sent back")
 
         return
