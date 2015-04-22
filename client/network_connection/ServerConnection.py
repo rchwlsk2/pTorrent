@@ -45,8 +45,6 @@ class ServerConnection(object):
         meta_size_str = "{:16d}".format(meta_size)
         total_size_str = "{:16d}".format(total_size)
 
-        print("Uploader response: ", total_size_str, meta_size_str, metadata, data)
-
         message_str = total_size_str + meta_size_str + metadata
         self.connection.sendall(message_str.encode())
         self.connection.sendall(data)
