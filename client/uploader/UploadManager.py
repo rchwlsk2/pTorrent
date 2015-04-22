@@ -2,14 +2,14 @@ import threading
 import json
 import signal
 import os
+import sys
 from socket import *
 from socket import error as sock_err
 
+from client.uploader.TrackerThread import TrackerThread
 from client.network_connection import ServerConnection
 from client.file_manager import MetadataFile, FileConstants
 import client.CONSTANTS as CONSTANTS
-
-
 
 
 ##
@@ -26,23 +26,29 @@ class UploadManager(object):
     ##
     # Initializes dictionary of files and connections and starts accepting server connections
     ##
-    def __init__(self, root_path, tracker_ip, tracker_port):
+    def __init__(self, root_path, port, tracker_ip, tracker_port):
+        self.upload_ip = CONSTANTS.LOCALHOST
+        self.upload_port = port
+
         self.tracker_ip = tracker_ip
         self.tracker_port = tracker_port
 
         self.files = {}             # Key is the file ID
         self.connections = {}       # Key is the IP
 
-        self.gather_files(root_path)
-
         # Exit handler
         signal.signal(signal.SIGINT, self.exit_handler)
 
-        # Make sure localhost runs properly
-        if tracker_ip == CONSTANTS.LOCALHOST:
-            tracker_ip = ""
+        # Initialize tracker connection thread
+        self.tracker_conn = TrackerThread(tracker_ip, tracker_port)
+        self.tracker_conn.start()
 
-        address = ("", 10000)
+        self.gather_files(root_path)
+
+        temp_upload_ip = self.upload_ip
+        if temp_upload_ip == CONSTANTS.LOCALHOST:
+            temp_upload_ip = ""
+        address = (temp_upload_ip, self.upload_port)
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
@@ -60,7 +66,6 @@ class UploadManager(object):
         # Start the server loop
         self.server_loop()
 
-        self.sock.close()
         return
 
     ##
@@ -68,12 +73,19 @@ class UploadManager(object):
     ##
     def exit_handler(self, signum, frame):
         print("\nUploads stopped!")
+        self.tracker_conn.remove_all(self.upload_ip)
+
+        self.sock.close()
+        self.tracker_conn.stop()
         sys.exit(0)
+        return
 
     ##
     # Registers a given file with the tracker
     ##
-    def register_file(self):
+    def register_file(self, file_id, path):
+        self.tracker_conn.add(file_id, self.upload_ip, self.upload_port)
+        self.files[file_id] = path
         return
 
     ##
@@ -100,7 +112,8 @@ class UploadManager(object):
             if os.path.exists(filepath):
                 print(filepath)
                 #uploader = Uploader(self, path, self.tracker_ip, self.tracker_port)
-                self.files[metadata.file_id] = filepath
+                #self.files[metadata.file_id] = filepath
+                self.register_file(metadata.file_id, filepath)
 
         return
 
