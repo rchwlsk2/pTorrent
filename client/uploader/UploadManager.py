@@ -27,6 +27,7 @@ class UploadManager(object):
     # Initializes dictionary of files and connections and starts accepting server connections
     ##
     def __init__(self, root_path, port, tracker_ip, tracker_port):
+        self.root_path = root_path
         self.upload_ip = CONSTANTS.LOCALHOST
         self.upload_port = port
 
@@ -43,7 +44,7 @@ class UploadManager(object):
         self.tracker_conn = TrackerThread(tracker_ip, tracker_port)
         self.tracker_conn.start()
 
-        self.gather_files(root_path)
+        #self.gather_files(root_path)
 
         temp_upload_ip = self.upload_ip
         if temp_upload_ip == CONSTANTS.LOCALHOST:
@@ -64,8 +65,14 @@ class UploadManager(object):
         self.sock.listen(10)
 
         # Start the server loop
-        self.server_loop()
+        self.server_thread = threading.Thread(target=self.server_loop)
+        return
 
+    ##
+    # Starts the uploading
+    ##
+    def resume_all(self):
+        self.server_thread.start()
         return
 
     ##
@@ -83,9 +90,14 @@ class UploadManager(object):
     ##
     # Registers a given file with the tracker
     ##
-    def register_file(self, file_id, path):
-        self.tracker_conn.add(file_id, self.upload_ip, self.upload_port)
-        self.files[file_id] = path
+    def register_file(self, path):
+        print("Adding... ", path)
+        metadata = MetadataFile()
+        metadata.parse(path)
+        filepath = os.path.join(self.root_path, CONSTANTS.DOWNLOADS, metadata.filename)
+
+        self.tracker_conn.add(metadata.file_id, self.upload_ip, self.upload_port)
+        self.files[metadata.file_id] = filepath
         return
 
     ##
