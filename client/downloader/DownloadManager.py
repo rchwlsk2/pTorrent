@@ -39,7 +39,7 @@ class DownloadManager(object):
         if metadata.file_id not in self.downloaders.keys():
             filepath = os.path.join(CONSTANTS.ROOT, CONSTANTS.DOWNLOADS, metadata.filename)
             if not os.path.exists(filepath):
-                downloader = Downloader(self, path)
+                downloader = Downloader(self, path, self.done_callback)
                 self.downloaders[downloader.file_id] = downloader
 
         return
@@ -75,7 +75,6 @@ class DownloadManager(object):
     def send_to_downloader(self, ip, metadata, file_data):
         file_id = metadata[MessageConstants.FILE]
         downloader = self.downloaders[file_id]
-        print(self.downloaders, downloader)
         if downloader is not None:
             downloader.add_data(ip, metadata, file_data)
         return

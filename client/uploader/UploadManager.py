@@ -53,7 +53,7 @@ class UploadManager(object):
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
-        print("Starting uploads... ")
+        #print("Starting uploads... ")
         try:
             self.sock.bind(address)
         except sock_err as e:
@@ -114,7 +114,7 @@ class UploadManager(object):
 
         # Get all possible files
         meta_files = []
-        print(os.listdir(downloads_path))
+        #print(os.listdir(downloads_path))
         for file in os.listdir(downloads_path):
             filepath = os.path.join(downloads_path, file)
             is_file = os.path.isfile(filepath)
@@ -128,9 +128,7 @@ class UploadManager(object):
             metadata.parse(path)
             filepath = os.path.join(root_path, CONSTANTS.DOWNLOADS, metadata.filename)
             if os.path.exists(filepath):
-                print(filepath)
-                #uploader = Uploader(self, path, self.tracker_ip, self.tracker_port)
-                #self.files[metadata.file_id] = filepath
+                #print(filepath)
                 self.register_file(metadata.file_id, filepath)
 
         return
@@ -141,7 +139,7 @@ class UploadManager(object):
     def server_loop(self):
         while True:
             connection, address = self.sock.accept()
-            print('Connected with ' + address[0] + ':' + str(address[1]))
+            #print('Connected with ' + address[0] + ':' + str(address[1]))
 
             UploadConnectionThread(self, connection).start()
         return
@@ -170,7 +168,7 @@ class UploadConnectionThread(threading.Thread):
     # Overrides the default run function to uploads parts of files
     ##
     def run(self):
-        print("UPLOAD THREAD")
+        #print("UPLOAD THREAD")
         connection = ServerConnection(self.connection)
 
         while True:
@@ -185,7 +183,7 @@ class UploadConnectionThread(threading.Thread):
             # Check that request is proper
             if request is not "":
                 request_dict = json.loads(request)
-                print("Received request", request_dict)
+                #print("Received request", request_dict)
 
                 file_id = request_dict[MessageConstants.FILE]
                 offset = request_dict[MessageConstants.OFFSET]

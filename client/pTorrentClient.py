@@ -52,6 +52,9 @@ class pTorrentClient(object):
         self.download_mgr.pause_all()
         return
 
+    '''
+    For GUI functionality
+
     ##
     # Adds a file for upload
     ##
@@ -70,6 +73,7 @@ class pTorrentClient(object):
         self.downloads.append(new_meta)
         self.download_mgr.register_file(new_meta)
         return
+    '''
 
     ##
     # Callback function to move downloaded files from the download module to upload module

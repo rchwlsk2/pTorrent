@@ -15,7 +15,7 @@ class TestDownload(unittest.TestCase):
     def setUp(self):
         pass
 
-    def done_callback(self, ):
+    def done_callback(self, a, b):
         return
 
     def test_something(self):

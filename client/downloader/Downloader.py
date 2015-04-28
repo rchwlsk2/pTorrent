@@ -8,8 +8,6 @@ from client.network_connection import MessageConstants
 import client.CONSTANTS as CONSTANTS
 
 
-
-
 ##
 # In charge of downloading a file from all available hosts
 #
@@ -121,10 +119,11 @@ class Downloader(object):
             offset = metadata[MessageConstants.OFFSET]
 
             with self.file_lock:
-                print("Writing to file")
                 self.file.write(offset, file_data)
-                print("File written to, progress:", self.file.map.get_progress()*100, "%")
+                print("File written to, progress: {:3.1f}%".format(self.file.map.get_progress()*100))
                 if self.file.is_downloaded():
+                    self.should_run = False
+
                     self.file.convert_to_full()
                     os.remove(self.file.map.filename)
                     self.done_callback(self.file_id, self.metadata_path)

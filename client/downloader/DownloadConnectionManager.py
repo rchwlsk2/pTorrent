@@ -86,7 +86,7 @@ class DownloadConnectionThread(threading.Thread):
     # Overrides the default run function to queue downloads
     ##
     def run(self):
-        print("DOWNLOAD THREAD: ", self.ip, self.port)
+        #print("DOWNLOAD THREAD: ", self.ip, self.port)
         client_conn = ClientConnection(self.ip, self.port)
 
         while True:
@@ -97,7 +97,7 @@ class DownloadConnectionThread(threading.Thread):
 
             request = self.requests.pop()
             metadata, file_data = client_conn.send_request(request[0], request[1], request[2])
-            print("Response gotten", metadata, file_data)
+            #print("Response gotten", metadata, file_data)
 
             if not metadata or not file_data:
                 continue
