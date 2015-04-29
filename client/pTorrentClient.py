@@ -23,10 +23,10 @@ class pTorrentClient(object):
     # @param tracker_ip The IP address of the tracker server
     # @param tracker_port The port of the tracker server
     ##
-    def __init__(self, root, port, tracker_ip, tracker_port):
+    def __init__(self, root, ip, port, tracker_ip, tracker_port):
         self.root = root
         self.download_mgr = DownloadManager(root, self.download_done_callback)
-        self.upload_mgr = UploadManager(root, port, tracker_ip, tracker_port)
+        self.upload_mgr = UploadManager(root, ip, port, tracker_ip, tracker_port)
 
         self.downloads, self.uploads = FileUtils.gather_files(root)
         for meta in self.downloads:
@@ -50,16 +50,25 @@ class pTorrentClient(object):
     ##
     def exit(self):
         self.download_mgr.pause_all()
+        self.upload_mgr.stop()
         return
-
-    '''
-    For GUI functionality
 
     ##
     # Adds a file for upload
     ##
-    def add_upload_file(self, file_path, piece_size):
+    def add_upload_file(self, file_path):
+        piece = 2 ** 15
+        tracker = "54.200.76.207:6045"
 
+        file = file_path.split("/")[-1]
+        new_file = os.path.join(self.root, CONSTANTS.DOWNLOADS, file)
+        shutil.copy(file_path, new_file)
+
+        metadata = MetadataFile()
+        meta_path = metadata.generate(new_file, tracker, piece_size=piece)
+
+        self.uploads.append(meta_path)
+        self.upload_mgr.register_file(meta_path)
         return
 
     ##
@@ -73,7 +82,9 @@ class pTorrentClient(object):
         self.downloads.append(new_meta)
         self.download_mgr.register_file(new_meta)
         return
-    '''
+
+    def delete_all_data(self, meta_path):
+        return
 
     ##
     # Callback function to move downloaded files from the download module to upload module

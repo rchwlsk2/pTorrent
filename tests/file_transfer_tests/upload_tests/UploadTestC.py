@@ -18,7 +18,7 @@ class TestUpload(unittest.TestCase):
         pass
 
     def test_something(self):
-        up_mgr = UploadManager("", 10010, "54.200.76.207", 6045)
+        up_mgr = UploadManager("", "localhost", 10010, "54.200.76.207", 6045)
 
         downloads, uploads = FileUtils.gather_files("")
         for meta in uploads:

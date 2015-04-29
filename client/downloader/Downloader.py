@@ -38,7 +38,7 @@ class Downloader(object):
         self.ip_threads = {}
         self.ips = []
 
-        self.should_run = True
+        self.should_run = False
         return
 
     ##
@@ -106,6 +106,7 @@ class Downloader(object):
                 del self.ip_threads[file_id]
 
             self.ips = new_ips
+            print(self.ips)
             sock.close()
         return
 
@@ -122,10 +123,9 @@ class Downloader(object):
                 self.file.write(offset, file_data)
                 print("File written to, progress: {:3.1f}%".format(self.file.map.get_progress()*100))
                 if self.file.is_downloaded():
-                    self.should_run = False
-
                     self.file.convert_to_full()
                     os.remove(self.file.map.filename)
+                    self.stop()
                     self.done_callback(self.file_id, self.metadata_path)
                     return
 
@@ -165,6 +165,7 @@ class DownloaderThread(threading.Thread):
     # Wakes the thread to continue running
     ##
     def wake(self):
+        print("Waking thread")
         self.should_wake = True
         with self.cv:
             self.cv.notify()

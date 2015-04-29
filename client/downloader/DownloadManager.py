@@ -41,7 +41,6 @@ class DownloadManager(object):
             if not os.path.exists(filepath):
                 downloader = Downloader(self, path, self.done_callback)
                 self.downloaders[downloader.file_id] = downloader
-
         return
 
     ##

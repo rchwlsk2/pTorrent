@@ -19,7 +19,7 @@ class ptTerm(object):
 
         self.should_run = True
 
-        self.ptorrent = pTorrentClient("client", port, tracker_ip, tracker_port)
+        self.ptorrent = pTorrentClient("client", "localhost", port, tracker_ip, tracker_port)
         self.ptorrent.start()
 
         return

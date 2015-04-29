@@ -18,13 +18,15 @@ class DownloadListItemWidget(QWidget):
     def __init__(self, name, parent=None):
         super(DownloadListItemWidget, self).__init__(parent)
 
-        self.pause_callback = None
+        self.name = name
+        self.downloader = None
+        self.downloading = False
         main_layout = QHBoxLayout()
 
         self.download_name = QLabel(name)
         self.progress_percent = QLabel("0%")
         self.progress_size = QLabel("0 kB")
-        self.pause_button = QPushButton(self.PAUSE_LABEL)
+        self.pause_button = QPushButton(self.RESUME_LABEL)
 
         main_layout.addWidget(self.download_name, 3)
         main_layout.addWidget(self.progress_percent, 1)
@@ -36,10 +38,10 @@ class DownloadListItemWidget(QWidget):
         return
 
     ##
-    # Sets the button callback function
+    # Sets the downloader
     ##
-    def set_pause_callback(self, callback):
-        self.pause_callback = callback
+    def set_downloader(self, downloader):
+        self.downloader = downloader
         return
 
     ##
@@ -51,8 +53,14 @@ class DownloadListItemWidget(QWidget):
         else:
             self.pause_button.setText(self.PAUSE_LABEL)
 
-        if self.pause_callback:
-            self.pause_callback()
+        if self.downloader:
+            if not self.downloading:
+                self.downloading = True
+                self.downloader.start()
+            elif self.downloading:
+                self.downloading = False
+                self.downloader.stop()
+
         return
 
     ##
@@ -66,6 +74,7 @@ class DownloadListItemWidget(QWidget):
         new_percent += "%"
         self.progress_percent.setText(new_percent)
 
-        new_size = str(size) + " kB"
+        new_size = "%10f" % size
+        new_size += " kB"
         self.progress_size.setText(new_size)
         return

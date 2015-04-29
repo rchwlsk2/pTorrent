@@ -18,7 +18,7 @@ class UploadListItemWidget(QWidget):
     def __init__(self, name, parent=None):
         super(UploadListItemWidget, self).__init__(parent)
 
-        self.pause_callback = None
+        self.name = name
         main_layout = QHBoxLayout()
 
         self.download_name = QLabel(name)
