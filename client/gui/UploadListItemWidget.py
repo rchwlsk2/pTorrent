@@ -22,21 +22,8 @@ class UploadListItemWidget(QWidget):
         main_layout = QHBoxLayout()
 
         self.download_name = QLabel(name)
-        self.progress_size = QLabel("0 kB")
 
-        main_layout.addWidget(self.download_name, 5)
-        main_layout.addWidget(self.progress_size, 1)
+        main_layout.addWidget(self.download_name)
 
         self.setLayout(main_layout)
-        return
-
-    ##
-    # Updates the progress values
-    #
-    # @param percent Float value of percent downloaded
-    # @param size Float value of file size downloaded
-    ##
-    def set_progress(self, size):
-        new_size = str(size) + " kB"
-        self.progress_size.setText(new_size)
         return

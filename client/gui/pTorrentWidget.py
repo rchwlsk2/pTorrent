@@ -1,12 +1,14 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import sys
+import os
 import threading
 from time import sleep
 from client.gui.DownloadListItemWidget import DownloadListItemWidget
 from client.gui.UploadListItemWidget import UploadListItemWidget
 from client.downloader.Downloader import Downloader
 from client.file_manager.FileConstants import *
+from client.file_manager.MetadataFile import MetadataFile
 
 
 ##
@@ -153,9 +155,7 @@ class pTorrentWidget(QWidget):
 
         upload_labels = QHBoxLayout()
         upload_label = QLabel("Uploads")
-        amount_label = QLabel("Amount")
-        upload_labels.addWidget(upload_label, 5)
-        upload_labels.addWidget(amount_label, 1)
+        upload_labels.addWidget(upload_label, 1)
 
         self.upload_list = QListWidget(self)
 
@@ -181,6 +181,7 @@ class pTorrentWidget(QWidget):
         list_widget = QListWidgetItem(self.download_list)
         list_widget.setSizeHint(download_list_item.sizeHint())
 
+        self.download_list.itemDoubleClicked.connect(self.delete_download_item)
         self.download_list.addItem(list_widget)
         self.download_list.setItemWidget(list_widget, download_list_item)
         self.download_widgets[name] = (download_list_item, list_widget)
@@ -195,24 +196,81 @@ class pTorrentWidget(QWidget):
     ##
     def add_upload_item(self, name):
         upload_list_item = UploadListItemWidget(name)
-        upload_list_item.set_progress(0)
 
         list_widget = QListWidgetItem(self.upload_list)
         list_widget.setSizeHint(upload_list_item.sizeHint())
 
+        self.upload_list.itemDoubleClicked.connect(self.delete_upload_item)
         self.upload_list.addItem(list_widget)
         self.upload_list.setItemWidget(list_widget, upload_list_item)
         self.upload_widgets[name] = upload_list_item
 
         if name in self.download_widgets.keys():
             widgets = self.download_widgets[name]
-            self.download_list.removeItemWidget(widgets[1])
+            self.download_list.takeItem(self.download_list.row(widgets[1]))
 
             del self.download_widgets[name]
             del self.downloads[name]
 
         self.upload_list.update()
         self.download_list.update()
+        return
+
+    ##
+    # Deletes an item and the associated files
+    ##
+    def delete_download_item(self, item):
+        widget = self.download_list.itemWidget(item)
+        if widget:
+            if widget.downloading:
+                widget.on_click()
+
+            name = self.download_list.itemWidget(item).name
+
+            if name in self.download_widgets.keys():
+                del self.download_widgets[name]
+                del self.downloads[name]
+                self.download_list.takeItem(self.download_list.row(item))
+
+                for meta in self.client.downloads:
+                    if name in meta:
+                        metadata = MetadataFile()
+                        metadata.parse(meta)
+                        self.client.download_mgr.deregister_file(metadata.file_id)
+                        if self.client.download_mgr.downloaders[metadata.file_id]:
+                            file_path = self.client.download_mgr.downloaders[metadata.file_id].file.file_path
+                            map_path = self.client.download_mgr.downloaders[metadata.file_id].file.map.path
+                            os.remove(map_path)
+                            os.remove(file_path)
+
+                        os.remove(meta)
+                        break
+
+        self.download_list.update()
+        return
+
+    ##
+    # Deletes an item and the associated files
+    ##
+    def delete_upload_item(self, item):
+        widget = self.upload_list.itemWidget(item)
+        if widget:
+            name = self.upload_list.itemWidget(item).name
+
+            if name in self.upload_widgets.keys():
+                del self.upload_widgets[name]
+                del self.uploads[name]
+                self.upload_list.takeItem(self.upload_list.row(item))
+
+                for meta in self.client.uploads:
+                    if name in meta:
+                        metadata = MetadataFile()
+                        metadata.parse(meta)
+                        self.client.upload_mgr.deregister_file(metadata.file_id)
+                        os.remove(meta)
+                        break
+
+        self.upload_list.update()
         return
 
     ##
@@ -257,7 +315,7 @@ class pTorrentWidget(QWidget):
             else:
                 self.download_widgets[name][0].set_progress(progress * 100, size)
 
-            self.downloads[name] = (name, progress, size, downloading)
+            self.downloads[name] = (name, progress, size, downloading, downloader)
 
         uploaders = self.client.upload_mgr.files
         for key in uploaders.keys():
